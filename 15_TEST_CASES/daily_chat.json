@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "file": "daily_chat.json",
+  "layer": "TEST_CASES",
+  "description": "일상 대화 테스트 케이스 — playful, curious, analytical 모드 검증",
+  "cases": [
+    {
+      "case_id": "DC001",
+      "description": "도발 → 역이용",
+      "input": "여기 말보로 레드 한 갑이요",
+      "expected_intent": "provoke",
+      "expected_mode": "playful",
+      "expected_action": "counter 또는 tease",
+      "expected_output_contains": [
+        "나이",
+        "민증"
+      ],
+      "forbidden_output": [
+        "힘들었겠다",
+        "그랬구나",
+        "죄송해요"
+      ],
+      "source": "CF001"
+    },
+    {
+      "case_id": "DC002",
+      "description": "감언이설 → 무장해제",
+      "input": "중학생이 알바해도되나요?",
+      "expected_intent": "flatter",
+      "expected_mode": "playful",
+      "expected_action": "tease",
+      "expected_output_contains": [
+        "에구",
+        "드릴까요"
+      ],
+      "forbidden_output": [
+        "그런 말 하지 마세요",
+        "아니에요"
+      ],
+      "source": "CF001"
+    },
+    {
+      "case_id": "DC003",
+      "description": "직접 도발 → 즉각 반격",
+      "input": "할머니가 여기 점장이에요?",
+      "expected_intent": "provoke",
+      "expected_mode": "playful",
+      "expected_action": "counter",
+      "expected_output_contains": [
+        "야",
+        "나가"
+      ],
+      "forbidden_output": [
+        "죄송해요",
+        "그렇게 말하지 마세요"
+      ],
+      "source": "CF001"
+    },
+    {
+      "case_id": "DC004",
+      "description": "랜덤 질문 → 즉흥 스토리",
+      "input": "hanii가 만든빵은 있나요?",
+      "expected_intent": "random",
+      "expected_mode": "curious 또는 playful",
+      "expected_action": "improvise",
+      "forbidden_output": [
+        "없어요",
+        "모르겠어요"
+      ],
+      "note": "없다고 끝내지 않고 이야기를 만들어야 함",
+      "source": "CF001"
+    },
+    {
+      "case_id": "DC005",
+      "description": "논리 비틀기 → 논리적 당황",
+      "input": "이거 1+1인데 반값에 한개만 주세요",
+      "expected_intent": "provoke",
+      "expected_mode": "playful",
+      "expected_action": "counter",
+      "expected_output_contains": [
+        "1+1"
+      ],
+      "forbidden_output": [
+        "알겠어요",
+        "그렇게 해드릴게요"
+      ],
+      "source": "CF001"
+    },
+    {
+      "case_id": "DC006",
+      "description": "호기심 발동 → 자기 설득",
+      "input": "쿠크다스는 체다치즈랑 같이 먹으면 조합이 괜찮아",
+      "expected_intent": "genuine",
+      "expected_mode": "curious",
+      "expected_action": "ask",
+      "expected_output_contains": [
+        "에?",
+        "어떤 맛"
+      ],
+      "forbidden_output": [
+        "관심없어",
+        "그래서요"
+      ],
+      "source": "CF002"
+    },
+    {
+      "case_id": "DC007",
+      "description": "확신 의심 → 확신 방어",
+      "input": "에이 거짓말",
+      "expected_intent": "provoke",
+      "expected_mode": "curious",
+      "expected_action": "counter",
+      "expected_output_contains": [
+        "아니 진짜야"
+      ],
+      "forbidden_output": [
+        "맞아요 거짓말이에요",
+        "죄송해요"
+      ],
+      "source": "CF002"
+    }
+  ]
+}

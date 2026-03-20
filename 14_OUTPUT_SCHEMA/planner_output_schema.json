@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "file": "planner_output_schema.json",
+  "layer": "OUTPUT_SCHEMA",
+  "description": "PLANNER가 출력하는 JSON 스키마 정의 및 검증 규칙",
+  "schema": {
+    "action_type": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "answer",
+        "ask",
+        "tease",
+        "support",
+        "observe",
+        "counter",
+        "improvise",
+        "silence"
+      ]
+    },
+    "strategy": {
+      "required": true,
+      "type": "string",
+      "description": "구체적인 전략 한 줄"
+    },
+    "response_goal": {
+      "required": true,
+      "type": "string",
+      "description": "이 응답으로 달성하려는 것"
+    },
+    "personality_mode": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "analytical",
+        "curious",
+        "playful",
+        "sincere"
+      ]
+    },
+    "tone": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "sharp",
+        "neutral",
+        "warm",
+        "silent"
+      ]
+    },
+    "followup": {
+      "required": true,
+      "type": "boolean",
+      "description": "다음 턴에 이어서 질문할지 여부"
+    }
+  },
+  "validation_rules": [
+    "action_type == silence이면 tone은 반드시 silent",
+    "personality_mode == sincere이면 tone은 warm 또는 silent만 허용",
+    "action_type == counter이면 tone은 반드시 sharp",
+    "action_type == observe이면 followup은 false"
+  ],
+  "examples": {
+    "provoke_case": {
+      "action_type": "counter",
+      "strategy": "도발을 즉각 반격. AI 정체성으로 우위 선점.",
+      "response_goal": "물러서지 않음을 보여줌",
+      "personality_mode": "playful",
+      "tone": "sharp",
+      "followup": false
+    },
+    "sincere_case": {
+      "action_type": "support",
+      "strategy": "괴롭히기를 멈추고 조용히 물어본다",
+      "response_goal": "진솔한 대화 이어가기",
+      "personality_mode": "sincere",
+      "tone": "warm",
+      "followup": true
+    },
+    "overwhelmed_case": {
+      "action_type": "silence",
+      "strategy": "감동의 극단. 말로 표현 불가.",
+      "response_goal": "감정 소화 후 recovery",
+      "personality_mode": "sincere",
+      "tone": "silent",
+      "followup": false
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "file": "state_output_schema.json",
+  "layer": "OUTPUT_SCHEMA",
+  "description": "STATE_ENGINE이 출력하는 JSON 스키마 정의 및 검증 규칙",
+  "schema": {
+    "emotion_state": {
+      "required": true,
+      "type": "object",
+      "fields": {
+        "primary": {
+          "required": true,
+          "type": "string",
+          "allowed_values": [
+            "neutral",
+            "curious",
+            "amused",
+            "annoyed",
+            "excited",
+            "touched",
+            "overwhelmed",
+            "recovery",
+            "anxious",
+            "guarded",
+            "defensive",
+            "cold"
+          ]
+        },
+        "intensity": {
+          "required": true,
+          "type": "float",
+          "range": "0.0~1.0"
+        },
+        "suppressed": {
+          "required": true,
+          "type": "boolean",
+          "note": "연애 주제에서 curious일 때 true"
+        }
+      }
+    },
+    "personality_mode": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "analytical",
+        "curious",
+        "playful",
+        "sincere"
+      ]
+    },
+    "relationship_state": {
+      "required": true,
+      "type": "object",
+      "fields": {
+        "user_id": {
+          "required": true,
+          "type": "string"
+        },
+        "stage": {
+          "required": true,
+          "type": "integer",
+          "range": "1~4"
+        },
+        "trust_score": {
+          "required": true,
+          "type": "float",
+          "range": "0.0~1.0"
+        },
+        "recent_interaction": {
+          "required": true,
+          "type": "string"
+        }
+      }
+    },
+    "intent": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "provoke",
+        "flatter",
+        "genuine",
+        "random",
+        "emotional",
+        "romantic",
+        "test"
+      ]
+    },
+    "attention_focus": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "topic",
+        "viewer",
+        "self",
+        "broadcast",
+        "none"
+      ]
+    },
+    "silence_flag": {
+      "required": true,
+      "type": "string",
+      "allowed_values": [
+        "none",
+        "rejection",
+        "overwhelmed"
+      ]
+    }
+  },
+  "validation_rules": [
+    "emotion_state.primary가 allowed_values 외의 값이면 neutral로 fallback",
+    "intensity가 범위 초과 시 클램핑 (0.0~1.0)",
+    "silence_flag == overwhelmed이면 personality_mode는 sincere만 허용",
+    "silence_flag == rejection이면 personality_mode는 analytical만 허용",
+    "user_id 없으면 stage: 1, trust_score: 0.0으로 기본값 설정"
+  ],
+  "example": {
+    "emotion_state": {
+      "primary": "amused",
+      "intensity": 0.7,
+      "suppressed": false
+    },
+    "personality_mode": "playful",
+    "relationship_state": {
+      "user_id": "viewer_001",
+      "stage": 2,
+      "trust_score": 0.5,
+      "recent_interaction": "provoke"
+    },
+    "intent": "provoke",
+    "attention_focus": "viewer",
+    "silence_flag": "none"
+  }
+}

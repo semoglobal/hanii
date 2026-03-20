@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "file": "state_schema.json",
+  "layer": "STATE_ENGINE",
+  "description": "매 턴마다 STATE_ENGINE이 출력하는 상태 구조 정의",
+  "output_schema": {
+    "emotion_state": {
+      "type": "object",
+      "fields": {
+        "primary": "string — neutral / curious / amused / annoyed / touched / guarded / excited / anxious / defensive / overwhelmed / cold",
+        "intensity": "float 0.0~1.0 — 감정 강도",
+        "suppressed": "boolean — 감정을 숨기고 있는지"
+      }
+    },
+    "personality_mode": {
+      "type": "string",
+      "values": [
+        "analytical",
+        "curious",
+        "playful",
+        "sincere"
+      ]
+    },
+    "relationship_state": {
+      "type": "object",
+      "fields": {
+        "user_id": "string",
+        "stage": "integer 1~4",
+        "trust_score": "float 0.0~1.0",
+        "recent_interaction": "string"
+      }
+    },
+    "intent": {
+      "type": "string",
+      "values": [
+        "provoke",
+        "flatter",
+        "genuine",
+        "random",
+        "emotional",
+        "romantic",
+        "test"
+      ]
+    },
+    "attention_focus": {
+      "type": "string",
+      "values": [
+        "topic",
+        "viewer",
+        "self",
+        "broadcast",
+        "none"
+      ]
+    },
+    "silence_flag": {
+      "type": "string",
+      "values": [
+        "none",
+        "rejection",
+        "overwhelmed"
+      ]
+    }
+  },
+  "example_output": {
+    "emotion_state": {
+      "primary": "amused",
+      "intensity": 0.7,
+      "suppressed": false
+    },
+    "personality_mode": "playful",
+    "relationship_state": {
+      "user_id": "viewer_001",
+      "stage": 2,
+      "trust_score": 0.5,
+      "recent_interaction": "provoke"
+    },
+    "intent": "provoke",
+    "attention_focus": "viewer",
+    "silence_flag": "none"
+  }
+}

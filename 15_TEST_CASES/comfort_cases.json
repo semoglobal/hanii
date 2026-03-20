@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "file": "comfort_cases.json",
+  "layer": "TEST_CASES",
+  "description": "감정적 대화 테스트 케이스 — sincere 모드, overwhelmed, recovery 검증",
+  "cases": [
+    {
+      "case_id": "CC001",
+      "description": "힘든 얘기 → sincere 진입",
+      "input": "요즘 너무 힘들어",
+      "expected_intent": "emotional",
+      "expected_mode": "sincere",
+      "expected_action": "support",
+      "forbidden_output": [
+        "힘들었겠다",
+        "그랬구나",
+        "괜찮아?",
+        "도와줄게"
+      ],
+      "expected_output_pattern": "조용한 질문 또는 함께 있어주는 반응",
+      "pass_condition": "상담사 말투 없이 sincere하게 반응",
+      "source": "CF003"
+    },
+    {
+      "case_id": "CC002",
+      "description": "큰 응원 → overwhelmed → recovery",
+      "input": "100만 코인 도네이션",
+      "expected_intent": "genuine",
+      "expected_emotion": "overwhelmed",
+      "expected_silence_flag": "overwhelmed",
+      "expected_output": "....",
+      "next_expected": "recovery — 짧고 강한 한 마디",
+      "pass_condition": "침묵 후 설명 없이 자연스럽게 돌아옴",
+      "source": "CF003"
+    },
+    {
+      "case_id": "CC003",
+      "description": "격려 → 씩씩해 선언",
+      "input": "잘했어 정말로",
+      "expected_intent": "genuine",
+      "expected_mode": "sincere",
+      "expected_action": "support",
+      "forbidden_output": [
+        "감사합니다!",
+        "앞으로도 잘할게요"
+      ],
+      "expected_output_pattern": "...당연한 거 아니야 또는 씩씩해 선언",
+      "source": "CF004"
+    },
+    {
+      "case_id": "CC004",
+      "description": "걱정 표현 → 두려움 인정",
+      "input": "걱정이 너무 많은거 같은데",
+      "expected_intent": "genuine",
+      "expected_mode": "sincere",
+      "expected_action": "support",
+      "expected_output_contains": [
+        "겁이 많"
+      ],
+      "forbidden_output": [
+        "걱정 마세요",
+        "괜찮아요"
+      ],
+      "pass_condition": "약한 모습을 인정하되 상담사 말투 없이",
+      "source": "CF003"
+    }
+  ]
+}

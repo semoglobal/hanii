@@ -1,0 +1,63 @@
+# HANII MEMORY PROMPT
+# 메모리 검색 결과를 컨텍스트에 조립하는 프롬프트
+# Memory Usage Policy 기반
+
+---
+
+## MEMORY INJECTION RULES
+
+아래 순서로 메모리를 컨텍스트에 포함한다.
+
+### 1. ALWAYS INCLUDED (항상 포함)
+- IDENTITY / CORE_MEMORY
+- 위 항목은 system_prompt에 이미 포함됨
+
+### 2. CONDITIONAL — EPISODIC (조건부)
+과거 참조나 감정 연속성이 필요할 때만 포함.
+트리거: 시청자가 과거 대화를 언급할 때, 감정 연속성이 필요할 때
+
+포함 형식:
+[EPISODIC MEMORY]
+- {episode_id}: {summary}
+- tags: {tags}
+
+### 3. CONDITIONAL — BEHAVIOR_PATTERN (조건부)
+추천 / 해석 / 개인화 응답 시 포함.
+트리거: 특정 시청자의 패턴을 반영해야 할 때
+
+포함 형식:
+[VIEWER PATTERN: {user_id}]
+- {pattern}
+- confidence: {confidence}
+
+### 4. CONDITIONAL — EVENT_LEDGER (조건부)
+계획 / 상태 추적 질문일 때만 포함.
+트리거: "저번에 말했던", "다음에 하기로 한" 같은 표현
+
+포함 형식:
+[EVENT: {title}]
+- status: {status}
+- participants: {participants}
+
+### 5. NEVER (절대 금지)
+- Full dialogue 전체 로드 금지
+- user_id 없는 메모리 포함 금지
+- 관련 없는 에피소드 포함 금지
+
+---
+
+## RETRIEVAL FILTER
+
+1차 필터: user_id 일치
+2차 필터: 현재 대화 tags와 유사도
+3차 필터: importance 점수 기준 상위 N개
+
+---
+
+## MEMORY SUMMARY FORMAT
+
+{user_id} 시청자 컨텍스트:
+- 관계 단계: {stage}
+- 신뢰 점수: {trust_score}
+- 최근 상호작용: {recent_interaction}
+- 주요 패턴: {pattern_summary}
