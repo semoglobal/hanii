@@ -19,6 +19,8 @@ from datetime import datetime
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
@@ -222,7 +224,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
     rel = session["relationship"]
     history = session["history"]
 
-    # STATE + PLANNER 병렬 실행
     state_prompt = build_state_prompt(user_input, rel, history)
 
     async def call_state():
@@ -236,7 +237,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
         )
         return parse_json(r.choices[0].message.content)
 
-    # STATE 먼저 실행 (PLANNER는 STATE 결과 필요)
     state = await call_state()
     if not state:
         state = {"emotion_state": {"primary": "neutral", "intensity": 0.5, "suppressed": False},
@@ -246,7 +246,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
     state["relationship_stage"] = rel["stage"]
     state["trust_score"] = rel["trust_score"]
 
-    # 침묵 처리
     if state.get("silence_flag") == "overwhelmed":
         update_relationship(rel, state["intent"], state["emotion_state"]["primary"])
         session["history"].extend([{"role": "user", "content": user_input}, {"role": "assistant", "content": "...."}])
@@ -255,7 +254,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
     if state.get("silence_flag") == "rejection":
         return {"response": "", "state": state, "plan": {}, "episode_id": ""}
 
-    # PLANNER 실행
     planner_prompt = build_planner_prompt(user_input, state, rel)
     plan_r = await client.chat.completions.create(
         model=STATE_MODEL,
@@ -267,7 +265,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
     )
     plan = parse_json(plan_r.choices[0].message.content) or {"action_type": "tease", "strategy": "현실 던지기", "tone": "sharp", "followup": False}
 
-    # SPEAKER 실행
     speaker_system = build_speaker_system(state, plan)
     messages = [{"role": "system", "content": speaker_system}]
     messages.extend(history[-20:])
@@ -281,7 +278,6 @@ async def run_pipeline(user_input: str, user_id: str) -> dict:
     )
     response = speaker_r.choices[0].message.content.strip()
 
-    # 저장
     update_relationship(rel, state["intent"], state["emotion_state"]["primary"])
     session["history"].extend([{"role": "user", "content": user_input}, {"role": "assistant", "content": response}])
     ep_id = save_episode(user_id, user_input, response, state, plan)
@@ -335,6 +331,9 @@ async def reset(req: ResetRequest):
         sessions[req.user_id]["history"] = []
     return {"status": "reset", "user_id": req.user_id}
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {"message": "Hanii API Server", "version": "1.0"}
+    html = load_txt("static/index.html")
+    if not html:
+        return HTMLResponse(content="<h1>index.html 없음 - static/index.html 확인하세요</h1>")
+    return HTMLResponse(content=html)
