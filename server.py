@@ -18,28 +18,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CHAT_MEMORY_FILE = "chat_memory.json"
 EXTRA_MEMORY_FILE = "extra_memory.json"
 LOG_DIR = "chat_logs"
+MEMORY_DIR = "chat_memories"
 
 os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(MEMORY_DIR, exist_ok=True)
 
-def load_memory():
-    if os.path.exists(CHAT_MEMORY_FILE):
-        with open(CHAT_MEMORY_FILE, "r", encoding="utf-8") as f:
-            chat_memory = json.load(f)
+# 닉네임별 메모리 (런타임)
+chat_memories = {}
+
+def safe_name(nickname):
+    return nickname.strip().replace(" ", "_") or "unknown"
+
+def load_chat_memory(nickname):
+    if nickname in chat_memories:
+        return chat_memories[nickname]
+    path = os.path.join(MEMORY_DIR, f"{safe_name(nickname)}.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            chat_memories[nickname] = json.load(f)
     else:
-        chat_memory = []
+        chat_memories[nickname] = []
+    return chat_memories[nickname]
+
+def save_chat_memory(nickname):
+    path = os.path.join(MEMORY_DIR, f"{safe_name(nickname)}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(chat_memories[nickname], f, ensure_ascii=False, indent=2)
+
+def load_extra_memory():
     if os.path.exists(EXTRA_MEMORY_FILE):
         with open(EXTRA_MEMORY_FILE, "r", encoding="utf-8") as f:
-            extra_memory = json.load(f)
-    else:
-        extra_memory = []
-    return chat_memory, extra_memory
+            return json.load(f)
+    return []
 
-def save_memory(chat_memory, extra_memory):
-    with open(CHAT_MEMORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(chat_memory, f, ensure_ascii=False, indent=2)
+def save_extra_memory(extra_memory):
     with open(EXTRA_MEMORY_FILE, "w", encoding="utf-8") as f:
         json.dump(extra_memory, f, ensure_ascii=False, indent=2)
 
@@ -47,11 +61,7 @@ def save_log(nickname, user_input, response_text):
     now = datetime.datetime.now()
     date_str = now.strftime("%Y-%m-%d")
     time_str = now.strftime("%H:%M:%S")
-
-    # 닉네임별 파일로 저장
-    safe_nick = "".join(c for c in nickname if c.isalnum() or c in ('-', '_')).strip() or "unknown"
-    log_file = os.path.join(LOG_DIR, f"{safe_nick}.txt")
-
+    log_file = os.path.join(LOG_DIR, f"{safe_name(nickname)}.txt")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"[{date_str} {time_str}]\n")
         f.write(f"{nickname}: {user_input}\n")
@@ -90,9 +100,9 @@ SYSTEM_PROMPT = """
 잡담·인사 흐름에서 맥락 지어내거나 철학적 의미 부여 금지.
 """
 
-chat_memory, extra_memory = load_memory()
-
-def build_messages(user_input):
+def build_messages(nickname, user_input):
+    extra_memory = load_extra_memory()
+    chat_memory = load_chat_memory(nickname)
     messages = []
     extra = "\n".join(extra_memory)
     system_full = SYSTEM_PROMPT + "\n" + extra
@@ -105,23 +115,22 @@ def build_messages(user_input):
 
 @app.post("/chat")
 async def chat_endpoint(body: dict):
-    global chat_memory, extra_memory
     user_input = body.get("message", "")
     nickname = body.get("nickname", "unknown")
 
     if "기억해" in user_input:
         mem = user_input.replace("기억해", "").strip()
         if mem:
+            extra_memory = load_extra_memory()
             extra_memory.append(mem)
-            save_memory(chat_memory, extra_memory)
+            save_extra_memory(extra_memory)
         return {"status": "저장됨"}
 
-    messages = build_messages(user_input)
+    messages = build_messages(nickname, user_input)
     response_text = ""
 
     async def generate():
         nonlocal response_text
-        global chat_memory, extra_memory
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream(
@@ -154,10 +163,11 @@ async def chat_endpoint(body: dict):
                                 response_text += token
                                 yield token
 
+        chat_memory = load_chat_memory(nickname)
         chat_memory.append({"user": user_input, "ai": response_text})
         if len(chat_memory) > 10:
-            chat_memory = chat_memory[-10:]
-        save_memory(chat_memory, extra_memory)
+            chat_memories[nickname] = chat_memory[-10:]
+        save_chat_memory(nickname)
         save_log(nickname, user_input, response_text)
 
     return StreamingResponse(generate(), media_type="text/plain")
