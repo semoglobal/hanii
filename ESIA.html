@@ -450,11 +450,14 @@ async function send() {
   const th = addThinking();
   let bubble = null;
   try {
-    const res = await fetch(SERVER + '/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history })
-    });
+  const res = await fetch(SERVER + '/chat', {
+  method: 'POST',
+  headers: { 
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '1'
+  },
+  body: JSON.stringify({ message: text, history })
+});
     th.remove();
     bubble = addMsg('esia', '');
     const reader = res.body.getReader();
