@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #141417;
+    --bg3: #1a1a1e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e8ea;
+    --text2: #888892;
+    --text3: #4a4a55;
+    --accent: #c8f547;
+    --accent-dim: rgba(200,245,71,0.08);
+    --accent-dim2: rgba(200,245,71,0.15);
+    --danger: #ff5f5f;
+    --r: 8px;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; }
+
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+  .shell {
+    width: 100%;
+    max-width: 720px;
+    height: 94vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+
+  .orb {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 0.5px solid var(--border2);
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .orb::after {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .brand-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    color: var(--text);
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: var(--text3);
+    letter-spacing: 0.06em;
+  }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+  .srv-badge {
+    font-size: 10px; color: var(--text3);
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .srv-badge:hover { border-color: var(--border2); color: var(--text2); }
+
+  .srv-edit {
+    display: none;
+    position: absolute;
+    top: 52px; right: 16px;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--r);
+    padding: 14px;
+    z-index: 10;
+    width: 300px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .srv-edit.open { display: flex; }
+  .srv-edit label { font-size: 10px; color: var(--text3); letter-spacing: 0.06em; }
+  .srv-edit input {
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+  .srv-edit input:focus { border-color: var(--accent); }
+  .srv-edit-btns { display: flex; gap: 6px; justify-content: flex-end; }
+  .srv-edit-btns button {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 0.5px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .srv-edit-btns button.primary {
+    background: var(--accent);
+    color: #0d0d0f;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .srv-edit-btns button:hover { opacity: 0.85; }
+
+  .msgs {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    scroll-behavior: smooth;
+  }
+  .msgs::-webkit-scrollbar { width: 2px; }
+  .msgs::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .row { display: flex; gap: 14px; align-items: flex-start; animation: fadeUp 0.18s ease; }
+  .row.user { flex-direction: row-reverse; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 0.5px solid var(--border2);
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text3);
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+  }
+  .row.esia .avatar { border-color: rgba(200,245,71,0.25); color: var(--accent); }
+
+  .bubble { max-width: 80%; display: flex; flex-direction: column; gap: 5px; }
+  .row.user .bubble { align-items: flex-end; }
+
+  .meta { font-size: 10px; color: var(--text3); letter-spacing: 0.04em; }
+
+  .text {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 11px 15px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .row.user .text {
+    background: var(--accent-dim);
+    border-color: rgba(200,245,71,0.15);
+  }
+
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg3);
+    border: 0.5px solid var(--border);
+    border-radius: var(--r);
+    padding: 11px 15px;
+  }
+  .think-dots { display: flex; gap: 4px; }
+  .think-dots span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text3);
+    animation: blink 1.4s infinite;
+  }
+  .think-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .think-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+  .think-label { font-size: 10px; color: var(--text3); letter-spacing: 0.06em; }
+
+  .err-text { font-size: 12px; color: var(--danger); }
+
+  .bottom {
+    border-top: 0.5px solid var(--border);
+    padding: 14px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+    background: var(--bg2);
+  }
+
+  .input-row { display: flex; align-items: flex-end; gap: 10px; }
+
+  textarea {
+    flex: 1;
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--r);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+    resize: none;
+    line-height: 1.6;
+    max-height: 130px;
+    overflow-y: auto;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea::placeholder { color: var(--text3); }
+  textarea:focus { border-color: rgba(200,245,71,0.3); }
+
+  .send-btn {
+    width: 36px; height: 36px;
+    border-radius: var(--r);
+    border: 0.5px solid var(--border2);
+    background: var(--accent-dim);
+    color: var(--accent);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .send-btn:hover { background: var(--accent-dim2); }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .footer-row { display: flex; justify-content: space-between; align-items: center; }
+  .footer-left { font-size: 10px; color: var(--text3); }
+  .footer-right { font-size: 10px; color: var(--text3); display: flex; gap: 6px; align-items: center; }
+  kbd {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text2);
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand">
+      <div class="orb"></div>
+      <span class="brand-name">ESIA</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>connected</span>
+      </div>
+      <div class="srv-badge" id="srv-badge" onclick="toggleEdit()">localhost:8000</div>
+    </div>
+  </div>
+
+  <div class="srv-edit" id="srv-edit">
+    <label>SERVER URL</label>
+    <input type="text" id="srv-input" value="http://localhost:8000" placeholder="http://localhost:8000">
+    <div class="srv-edit-btns">
+      <button onclick="closeEdit()">취소</button>
+      <button class="primary" onclick="saveServer()">저장</button>
+    </div>
+  </div>
+
+  <div class="msgs" id="msgs">
+    <div class="row esia">
+      <div class="avatar">E</div>
+      <div class="bubble">
+        <div class="meta">esia · 시스템</div>
+        <div class="text">연결완료</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="input-row">
+      <textarea id="inp" rows="1" placeholder="메시지 입력..."
+        onkeydown="onKey(event)"
+        oninput="resize(this)"></textarea>
+      <button class="send-btn" onclick="send()" title="전송">
+        <svg viewBox="0 0 24 24">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="footer-row">
+      <span class="footer-left" id="char-count"></span>
+      <span class="footer-right">
+        <kbd>Enter</kbd> 전송 &nbsp; <kbd>Shift+Enter</kbd> 줄바꿈
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+let SERVER = 'http://localhost:8000';
+let history = [];
+
+function ts() {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function resize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+}
+
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  const cc = document.getElementById('char-count');
+  cc.textContent = e.target.value.length > 0 ? e.target.value.length + ' chars' : '';
+}
+
+function toggleEdit() {
+  document.getElementById('srv-edit').classList.toggle('open');
+  if (document.getElementById('srv-edit').classList.contains('open'))
+    document.getElementById('srv-input').focus();
+}
+
+function closeEdit() { document.getElementById('srv-edit').classList.remove('open'); }
+
+function saveServer() {
+  const val = document.getElementById('srv-input').value.trim();
+  if (val) {
+    SERVER = val;
+    document.getElementById('srv-badge').textContent = val.replace(/https?:\/\//,'');
+  }
+  closeEdit();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addMsg(role, text) {
+  const msgs = document.getElementById('msgs');
+  const label = role === 'user' ? '나' : 'esia';
+  const av = role === 'user' ? '나' : 'E';
+  const id = 'txt' + Date.now() + Math.random().toString(36).slice(2);
+  const div = document.createElement('div');
+  div.className = 'row ' + role;
+  div.innerHTML = `<div class="avatar">${av}</div><div class="bubble"><div class="meta">${label} · ${ts()}</div><div class="text" id="${id}">${escHtml(text)}</div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return document.getElementById(id);
+}
+
+function addThinking() {
+  const msgs = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'row esia';
+  div.id = 'thinking-row';
+  div.innerHTML = `<div class="avatar">E</div><div class="bubble"><div class="meta">esia · ${ts()}</div><div class="thinking"><div class="think-dots"><span></span><span></span><span></span></div><span class="think-label">처리 중</span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+async function send() {
+  const inp = document.getElementById('inp');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  document.getElementById('char-count').textContent = '';
+  addMsg('user', text);
+  const th = addThinking();
+  let bubble = null;
+  try {
+    const res = await fetch(SERVER + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history })
+    });
+    th.remove();
+    bubble = addMsg('esia', '');
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let full = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      full += dec.decode(value);
+      bubble.textContent = full;
+      document.getElementById('msgs').scrollTop = 99999;
+    }
+    history.push({ user: text, ai: full });
+    if (history.length > 10) history = history.slice(-10);
+  } catch(e) {
+    th.remove();
+    (bubble || addMsg('esia', '')).innerHTML = `<span class="err-text">연결 실패 — ${escHtml(SERVER)}</span>`;
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('srv-edit');
+  const badge = document.getElementById('srv-badge');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !badge.contains(e.target))
+    closeEdit();
+});
+</script>
+</body>
+</html>
