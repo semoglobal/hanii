@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 import httpx
 import json
 import os.path
+import datetime
 
 app = FastAPI()
 
@@ -19,6 +20,9 @@ app.add_middleware(
 
 CHAT_MEMORY_FILE = "chat_memory.json"
 EXTRA_MEMORY_FILE = "extra_memory.json"
+LOG_DIR = "chat_logs"
+
+os.makedirs(LOG_DIR, exist_ok=True)
 
 def load_memory():
     if os.path.exists(CHAT_MEMORY_FILE):
@@ -38,6 +42,21 @@ def save_memory(chat_memory, extra_memory):
         json.dump(chat_memory, f, ensure_ascii=False, indent=2)
     with open(EXTRA_MEMORY_FILE, "w", encoding="utf-8") as f:
         json.dump(extra_memory, f, ensure_ascii=False, indent=2)
+
+def save_log(nickname, user_input, response_text):
+    now = datetime.datetime.now()
+    date_str = now.strftime("%Y-%m-%d")
+    time_str = now.strftime("%H:%M:%S")
+
+    # 닉네임별 파일로 저장
+    safe_nick = "".join(c for c in nickname if c.isalnum() or c in ('-', '_')).strip() or "unknown"
+    log_file = os.path.join(LOG_DIR, f"{safe_nick}.txt")
+
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"[{date_str} {time_str}]\n")
+        f.write(f"{nickname}: {user_input}\n")
+        f.write(f"Esia: {response_text}\n")
+        f.write("-" * 40 + "\n")
 
 SYSTEM_PROMPT = """
 [Identity]
@@ -88,6 +107,7 @@ def build_messages(user_input):
 async def chat_endpoint(body: dict):
     global chat_memory, extra_memory
     user_input = body.get("message", "")
+    nickname = body.get("nickname", "unknown")
 
     if "기억해" in user_input:
         mem = user_input.replace("기억해", "").strip()
@@ -138,5 +158,6 @@ async def chat_endpoint(body: dict):
         if len(chat_memory) > 10:
             chat_memory = chat_memory[-10:]
         save_memory(chat_memory, extra_memory)
+        save_log(nickname, user_input, response_text)
 
     return StreamingResponse(generate(), media_type="text/plain")
